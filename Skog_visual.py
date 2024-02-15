@@ -4,7 +4,7 @@ import json
 import xarray as xr
 import matplotlib.pyplot as plt
 import os
-from sklearn.metrics import roc_curve, roc_auc_score
+# from sklearn.metrics import roc_curve, roc_auc_score
 
 BASE_PATH_DATA = '../data/skogsstyrelsen/'
 img_paths_train = list(np.load(os.path.join(BASE_PATH_DATA, 'skogs_names_train.npy')))
@@ -13,7 +13,7 @@ img_paths_test = list(np.load(os.path.join(BASE_PATH_DATA, 'skogs_names_test.npy
 json_content_train = list(np.load(os.path.join(BASE_PATH_DATA, 'skogs_json_train.npy'), allow_pickle=True))
 json_content_val = list(np.load(os.path.join(BASE_PATH_DATA, 'skogs_json_val.npy'), allow_pickle=True))
 
-class Skog_visualize_data:
+class SkogDataVisualization:
     """
     for inspect and understand the dataset
     """
@@ -48,7 +48,7 @@ class Skog_visualize_data:
         pass
         
 
-class Skog_visualize_perf:
+class SkogResultVisualization:
     """
     for model performance visualization
     """
@@ -58,8 +58,8 @@ class Skog_visualize_perf:
         self.img_path = img_path
     
     
-    def ROC_AUC(self, y, y_pred):
-        
+    def roc_auc(self, y, y_pred):
+
         fpr, tpr, thresholds = roc_curve(y, y_pred)
         auc = roc_auc_score(y, y_pred)
 
@@ -73,5 +73,5 @@ class Skog_visualize_perf:
         plt.show()
     
     
-skog_train_2 = Skog_visualize_data("image_train_2",img_paths_train)
+skog_train_2 = SkogDataVisualization("image_train_2",img_paths_train)
 skog_train_2.rgb(1)
