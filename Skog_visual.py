@@ -26,7 +26,7 @@ class SkogDataVisualization:
         self.name = name
         self.img_path = img_path
     
-    def normalize_band(self, img_index):
+    def store_band(self, img_index):
         
         self.img = xr.open_dataset(self.img_path[img_index])
         yy_mm_dd = getattr(self.img, 'time').values[0]
@@ -52,7 +52,7 @@ class SkogDataVisualization:
 
         """
 
-        self.img = np.concatenate(self.normalize_band(img_index)[0], axis=0)
+        self.img = np.concatenate(self.store_band(img_index)[0], axis=0)
         self.img = np.transpose(self.img, [1,2,0])
         self.img = np.fliplr(self.img).copy()
         self.img = np.flipud(self.img).copy()
@@ -78,11 +78,11 @@ class SkogDataVisualization:
         For understanding features, this method store all bands values 
         of the img_path in a pandas dataframe, column is band_names. 
         """
-        self.df = self.normalize_band(0)[1]
+        self.df = self.store_band(0)[1]
         for band in self.BAND_NAMES:
             for i in range(1,len(self.img_path)):
                 self.df[band] = np.concatenate((
-                    self.normalize_band(i)[1][band],
+                    self.store_band(i)[1][band],
                     self.df[band]), axis = None)
             self.df[band] = np.squeeze(self.df[band])
             
@@ -91,6 +91,28 @@ class SkogDataVisualization:
         self.df.to_pickle(f"{self.name} bands dataframe.pkl")
         return self.df
     
+    def stds_means(self):
+        try:
+            df = pd.read_pickle(f"{self.name} bands dataframe.pkl")
+        except FileNotFoundError:
+            df = self.band_df()  
+        self.band_std = []
+        self.band_mean = []
+        for band in self.BAND_NAMES:
+            self.band_std.append(df[band].std())
+            self.band_mean.append(df[band].mean())
+
+        return self.band_std, self.band_mean
+            
+    def normal_bands(self, img_index):
+        self.stds = self.stds_means()[0]
+        self.means = self.stds_means()[1]
+
+        img = self.compose_img(img_index)
+        H, W = img.shape[:2]
+        img = np.reshape((img - self.means) / self.stds, [H, W, len(self.BAND_NAMES)])
+        return img
+        
     def scatter_band(self):
         # scatter plot bands
         try:
