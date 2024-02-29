@@ -15,17 +15,18 @@ img_paths_test = list(np.load(os.path.join(BASE_PATH_DATA, 'skogs_names_test.npy
 json_content_train = list(np.load(os.path.join(BASE_PATH_DATA, 'skogs_json_train.npy'), allow_pickle=True))
 json_content_val = list(np.load(os.path.join(BASE_PATH_DATA, 'skogs_json_val.npy'), allow_pickle=True))
 
-class SkogDataVisualization:
-    """
-    for inspect and understand the dataset
-    """
-    BAND_NAMES = ['b01', 'b02', 'b03', 'b04', 'b05', 'b06', 'b07', 'b08', 'b8a', 'b09', 'b11', 'b12']
+BAND_NAMES = ['b01', 'b02', 'b03', 'b04', 'b05', 'b06', 'b07', 'b08', 'b8a', 'b09', 'b11', 'b12']
 
+# stds and means are calculated from train dataset
+stds = [0.10581802576780319, 0.09856127202510834, 0.0969739779829979, 0.09902837127447128, 0.0968807265162468, 0.10136120766401291, 0.10655524581670761, 0.10657545924186707, 0.10631011426448822, 0.1114731952548027, 0.09345966577529907, 0.10024210810661316]
+means = [0.095946565, 0.10766203, 0.13173726, 0.15344737, 0.19434468, 0.25526184, 0.2828849, 0.3022465, 0.31196824, 0.3159495, 0.32635692, 0.24979565]
+
+class Preprocess:
     
     def __init__(self, name, img_path):
         self.name = name
         self.img_path = img_path
-    
+        
     def store_band(self, img_index):
         
         self.img = xr.open_dataset(self.img_path[img_index])
@@ -35,7 +36,7 @@ class SkogDataVisualization:
         
         self.band_list = []
         self.band_dict = {}
-        for band in self.BAND_NAMES:
+        for band in BAND_NAMES:
             if yy >= 2022 and mm >= 1: # New normalization after Jan 2022
                 band_value = (getattr(self.img, band).values - 1000) / 10000
                 self.band_dict[band] = band_value
@@ -45,11 +46,28 @@ class SkogDataVisualization:
                 self.band_dict[band] = band_value
                 self.band_list.append(band_value)
         return self.band_list, self.band_dict
-        
+    
+    def band_df(self):
+        """
+        For understanding features, this method store all bands values 
+        of the img_path in a pandas dataframe, column is band_names. 
+        """
+        self.df = self.store_band(0)[1]
+        for band in BAND_NAMES:
+            for i in range(1,len(self.img_path)):
+                self.df[band] = np.concatenate((
+                    self.store_band(i)[1][band],
+                    self.df[band]), axis = None)
+            self.df[band] = np.squeeze(self.df[band])
+            
+        self.df = pd.DataFrame(self.df)
+        # Save DataFrame to pickle file
+        self.df.to_pickle(f"{self.name} bands dataframe.pkl")
+        return self.df  
+    
     def compose_img(self, img_index):
         """
-        shape image to H x W x band_channel with normalized band values 
-
+        shape image to H x W x band_channel 
         """
 
         self.img = np.concatenate(self.store_band(img_index)[0], axis=0)
@@ -58,6 +76,16 @@ class SkogDataVisualization:
         self.img = np.flipud(self.img).copy()
         
         return self.img
+    
+    def normal_img(self, img_index):
+        """
+        shape image to H x W x band_channel with normalized bands value
+        """
+
+        img = self.compose_img(img_index)
+        H, W = img.shape[:2]
+        img = np.reshape((img - means) / stds, [H, W, len(BAND_NAMES)])
+        return img
     
     def show_rgb(self, img_index):
         """
@@ -72,47 +100,6 @@ class SkogDataVisualization:
         self.rgb_img = img[:, :, [3,2,1]]/np.max(img[:, :, [3,2,1]])
         plt.imshow(self.rgb_img, vmin=0, vmax=1)
         
-    
-    def band_df(self):
-        """
-        For understanding features, this method store all bands values 
-        of the img_path in a pandas dataframe, column is band_names. 
-        """
-        self.df = self.store_band(0)[1]
-        for band in self.BAND_NAMES:
-            for i in range(1,len(self.img_path)):
-                self.df[band] = np.concatenate((
-                    self.store_band(i)[1][band],
-                    self.df[band]), axis = None)
-            self.df[band] = np.squeeze(self.df[band])
-            
-        self.df = pd.DataFrame(self.df)
-        # Save DataFrame to pickle file
-        self.df.to_pickle(f"{self.name} bands dataframe.pkl")
-        return self.df
-    
-    def stds_means(self):
-        try:
-            df = pd.read_pickle(f"{self.name} bands dataframe.pkl")
-        except FileNotFoundError:
-            df = self.band_df()  
-        self.band_std = []
-        self.band_mean = []
-        for band in self.BAND_NAMES:
-            self.band_std.append(df[band].std())
-            self.band_mean.append(df[band].mean())
-
-        return self.band_std, self.band_mean
-            
-    def normal_bands(self, img_index):
-        self.stds = self.stds_means()[0]
-        self.means = self.stds_means()[1]
-
-        img = self.compose_img(img_index)
-        H, W = img.shape[:2]
-        img = np.reshape((img - self.means) / self.stds, [H, W, len(self.BAND_NAMES)])
-        return img
-        
     def scatter_band(self):
         # scatter plot bands
         try:
@@ -120,8 +107,8 @@ class SkogDataVisualization:
         except FileNotFoundError:
             df = self.band_df()
             
-        for band_1 in list(self.BAND_NAMES):
-            for band_2 in list(self.BAND_NAMES):            
+        for band_1 in list(BAND_NAMES):
+            for band_2 in list(BAND_NAMES):            
                 if band_1 != band_2:
                     scatter = sn.scatterplot(
                         x=df[band_1],
@@ -145,7 +132,6 @@ class SkogDataVisualization:
         plt.show(hm)
         plt.show()
         return df
-
 
 class SkogResultVisualization:
     """
@@ -171,12 +157,15 @@ class SkogResultVisualization:
         plt.legend()
         plt.show()
     
-    
-skog_train_2 = SkogDataVisualization("image_train_2",img_paths_train)
+def stds_means(df):
+    band_std = []
+    band_mean = []
+    for band in BAND_NAMES:
+        band_std.append(df[band].std())
+        band_mean.append(df[band].mean())
 
-# skog_train_2.show_rgb(2)
+    return band_std, band_mean
 
-df = skog_train_2.corr_heatmap()
 
 def remove_collinear_features(x, threshold):
     '''
@@ -218,5 +207,8 @@ def remove_collinear_features(x, threshold):
     print('Removed Columns {}'.format(drops))
     return x
 
+# stds, means = stds_means(df)    
+skog_train = Preprocess("skog train",img_paths_train)
+df = skog_train.corr_heatmap()
 # remove highly correlated bands, set threshold 0.97
 remove_collinear_features(df, 0.97)
