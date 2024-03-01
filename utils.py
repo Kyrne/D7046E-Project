@@ -13,6 +13,10 @@ LABEL_PATH_VAL = 'skogs_gts_val.npy'
 LABEL_PATH_TEST = 'skogs_gts_test.npy'
 BAND_NAMES = ['b01', 'b02', 'b03', 'b04', 'b05', 'b06', 'b07', 'b08', 'b8a', 'b09', 'b11', 'b12']
 
+# stds and means are calculated from train dataset
+STDS = [0.10581802576780319, 0.09856127202510834, 0.0969739779829979, 0.09902837127447128, 0.0968807265162468, 0.10136120766401291, 0.10655524581670761, 0.10657545924186707, 0.10631011426448822, 0.1114731952548027, 0.09345966577529907, 0.10024210810661316]
+MEANS = [0.095946565, 0.10766203, 0.13173726, 0.15344737, 0.19434468, 0.25526184, 0.2828849, 0.3022465, 0.31196824, 0.3159495, 0.32635692, 0.24979565]
+
 def load_image(path):
     img = xr.open_dataset(path)
     yy_mm_dd = getattr(img, 'time').values[0]
@@ -51,13 +55,14 @@ def load_image(path):
     return img
 
 class CustomImageDataset(Dataset):
-    def __init__(self, label_dir, img_dir, transform=None, target_transform=None):
+    def __init__(self, label_dir, img_dir, transform=None, target_transform=None, use_selected_bands = False):
         self.img_labels = list(np.load(label_dir))
         self.img_dir = img_dir
         image_paths = list(np.load(img_dir))
         self.image_paths = [path[1:] for path in image_paths]
         self.transform = transform
         self.target_transform = target_transform
+        self.use_selected_bands = use_selected_bands
 
     def __len__(self):
         return len(self.img_labels)
@@ -70,6 +75,10 @@ class CustomImageDataset(Dataset):
         # convert to float32
         image = np.float32(image)
         label = np.float32(label)
+        
+        if self.use_selected_bands:
+            # dropping those bands: {'b8a', 'b07', 'b08', 'b03', 'b04', 'b05'}
+            image = image[:, :, [0,1,5,9,10,11]]
 
         if self.transform:
             image = self.transform(image)
@@ -78,7 +87,7 @@ class CustomImageDataset(Dataset):
         return image, label
 
 # train model function
-def train_model(model, criterion, optimizer, train_loader, val_loader, num_epochs = 10, show_plot = True, show_log=False, sigmoid=False, cnn = False):
+def train_model(model, criterion, optimizer, train_loader, val_loader, scheduler=None, num_epochs = 10, show_plot = True, show_log=False, sigmoid=False, cnn = False):
     
     min_loss = 10000
     
@@ -120,17 +129,6 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, num_epoch
 
             # get correct predicted instances
             train_correct += torch.sum(preds==labels).item()
-            for j,p in enumerate(preds):
-                if p == labels[j] and p == 0:
-                    clear_correct += 1
-                    total_clear += 1
-                elif p == labels[j] and p == 1:
-                    cloudy_correct += 1
-                    total_cloudy += 1
-                elif labels[j] == 0:
-                    total_clear += 1
-                elif labels[j] == 1:
-                    total_cloudy += 1
             
             # Clear stored gradient values
             optimizer.zero_grad()
@@ -145,6 +143,9 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, num_epoch
             
             # Update the parameters along their gradients
             optimizer.step()
+            
+            if scheduler != None:
+                scheduler.step()
             
             # Update loss
             epoch_training_loss += loss.detach().numpy()
@@ -168,9 +169,22 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, num_epoch
                 _,preds = torch.max(pred,dim=1)
             
             val_correct += torch.sum(preds==labels).item()
+            for j,p in enumerate(preds):
+                if p == labels[j] and p == 0:
+                    clear_correct += 1
+                    total_clear += 1
+                elif p == labels[j] and p == 1:
+                    cloudy_correct += 1
+                    total_cloudy += 1
+                elif labels[j] == 0:
+                    total_clear += 1
+                elif labels[j] == 1:
+                    total_cloudy += 1
              
-            # calculate loss
-            labels = labels.type(torch.int64)
+            if not sigmoid:
+                labels = labels.type(torch.int64)
+               
+            # calculate loss 
             loss = criterion(pred, labels)
             
             # check if loss is smaller than before, if so safe model
@@ -198,10 +212,10 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, num_epoch
             print(f'Epoch {i}, training loss: {training_loss[-1]}, validation loss: {validation_loss[-1]}')
             print(f'Train accuracy = {train_correct/train_size}')
             print(f'Validation accuracy = {val_correct/val_size}')
-            print(f'Cloudy accuracy = {cloudy_correct/total_cloudy}')
-            print(f'Clear accuracy = {clear_correct/total_clear}')
-            print(f'number of cloudy images = {total_cloudy}')
-            print(f'number of clear images = {total_clear}')
+            #print(f'Cloudy accuracy = {cloudy_correct/total_cloudy}')
+            #print(f'Clear accuracy = {clear_correct/total_clear}')
+            #print(f'number of cloudy images = {total_cloudy}')
+            #print(f'number of clear images = {total_clear}')
         
     if show_plot:
         # Plot training and validation loss
@@ -231,4 +245,4 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, num_epoch
     
     
     idx = np.argmin(validation_loss)
-    print(f'lowest loss for validation set: {np.min(validation_loss)}, with an accuracy of {validation_acc[idx]}')
+    print(f'lowest loss for validation set: {np.min(validation_loss)}, with an accuracy of {validation_acc[idx]}, cloud acc {cloudy_acc[idx]}, clear acc = {clear_acc[idx]}')
