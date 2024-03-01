@@ -129,7 +129,6 @@ class Preprocess:
         heatmap = sn.heatmap(corr_matrix, annot=True)
         hm = heatmap.get_figure()
         hm.savefig("correlation_heatmap.png", dpi = 300)
-        plt.show(hm)
         plt.show()
         return df
 
