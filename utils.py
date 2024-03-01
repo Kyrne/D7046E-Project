@@ -3,6 +3,7 @@ import numpy as np
 from torch.utils.data import Dataset
 import torch
 import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 BASE_PATH_DATA = 'data/skogsstyrelsen/'
 IMG_PATHS_TRAIN = 'skogs_names_train.npy'
@@ -189,7 +190,10 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, scheduler
             
             # check if loss is smaller than before, if so safe model
             if loss<min_loss:
-                torch.save(model, 'best_model.pt')
+                if cnn:
+                    torch.save(model, 'best_cnn_model.pt')
+                else:
+                    torch.save(model, 'best_model.pt')
                 min_loss = loss
             
             # Update loss
@@ -246,3 +250,52 @@ def train_model(model, criterion, optimizer, train_loader, val_loader, scheduler
     
     idx = np.argmin(validation_loss)
     print(f'lowest loss for validation set: {np.min(validation_loss)}, with an accuracy of {validation_acc[idx]}, cloud acc {cloudy_acc[idx]}, clear acc = {clear_acc[idx]}')
+
+
+def test_model(model, test_loader, sigmoid=False, cnn = False):
+    
+    total_correct, clear_correct, cloudy_correct = 0,0,0
+    total_cloudy, total_clear = 0,0
+    test_labels = []
+    predictions = []
+    
+    with torch.no_grad():
+        for batch_nr, (data, labels) in enumerate(test_loader):
+            
+            if not cnn:
+                data = data.view(-1,21*21*12)
+                
+            # predict
+            pred = model(data)
+        
+             # calculate accuracy
+            if sigmoid:
+                pred = pred.view(-1)
+                preds = torch.round(pred)
+            else:
+                _,preds = torch.max(pred,dim=1)
+            
+            total_correct += torch.sum(preds==labels).item()
+            for j,p in enumerate(preds):
+                if p == labels[j] and p == 0:
+                    clear_correct += 1
+                    total_clear += 1
+                elif p == labels[j] and p == 1:
+                    cloudy_correct += 1
+                    total_cloudy += 1
+                elif labels[j] == 0:
+                    total_clear += 1
+                elif labels[j] == 1:
+                    total_cloudy += 1
+                    
+            test_labels.extend(labels)
+            predictions.extend(preds)
+
+    print("Final accuracy: %.2f%%" % (100*total_correct/(total_cloudy+total_clear)))
+    print(f'Correct {total_correct} times out of {(total_cloudy+total_clear)}')
+
+    print(f'Correct Clear {clear_correct} times out of {total_clear}: {100*clear_correct/total_clear:.2f}%')
+    print(f'Correct Cloudy {cloudy_correct} times out of {total_cloudy}: {100*cloudy_correct/total_cloudy:.2f}%')
+
+    cm = confusion_matrix(test_labels, predictions)
+    ConfusionMatrixDisplay(confusion_matrix = cm,  display_labels=['Clear', 'Cloudy']).plot()
