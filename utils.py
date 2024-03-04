@@ -3,7 +3,7 @@ import numpy as np
 from torch.utils.data import Dataset
 import torch
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
 
 BASE_PATH_DATA = 'data/skogsstyrelsen/'
 IMG_PATHS_TRAIN = 'skogs_names_train.npy'
@@ -296,6 +296,10 @@ def test_model(model, test_loader, sigmoid=False, cnn = False):
 
     print(f'Correct Clear {clear_correct} times out of {total_clear}: {100*clear_correct/total_clear:.2f}%')
     print(f'Correct Cloudy {cloudy_correct} times out of {total_cloudy}: {100*cloudy_correct/total_cloudy:.2f}%')
+    
+    print(f'Recall Score = {recall_score(test_labels, predictions)}')
+    print(f'Precision Score = {precision_score(test_labels, predictions)}')
+    print(f'F1 Score = {f1_score(test_labels, predictions)}')
 
     cm = confusion_matrix(test_labels, predictions)
     ConfusionMatrixDisplay(confusion_matrix = cm,  display_labels=['Clear', 'Cloudy']).plot()
