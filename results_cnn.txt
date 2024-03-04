@@ -1,0 +1,211 @@
+First try:
+- no augmentation
+- no normalization 
+- all bands
+- LR = 0.01
+- Epochs = 30
+- SGD optim
+- criterion: CrossEntropy
+
+lowest loss for validation set: 0.044155413284897804, with an accuracy of 0.8333333333333334, cloud acc 0.55, clear acc = 0.9423076923076923
+
+Second try:
+- no augmentation
+- no normalization 
+- all bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: CrossEntropy
+
+lowest loss for validation set: 0.037056279886100024, with an accuracy of 0.8611111111111112, cloud acc 0.8, clear acc = 0.8846153846153846
+
+Second try Again:
+- no augmentation
+- no normalization 
+- all bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: CrossEntropy
+
+lowest loss for validation set: 0.04026716471546226, with an accuracy of 0.8888888888888888, cloud acc 0.7, clear acc = 0.9615384615384616
+
+Second try Again B:
+- no augmentation
+- no normalization 
+- all bands
+- LR = 0.001
+- Epochs = 50
+- Adam optim
+- criterion: CrossEntropy
+
+lowest loss for validation set: 0.034142927163177066, with an accuracy of 0.8333333333333334, cloud acc 0.85, clear acc = 0.8269230769230769
+
+Second try Again C:
+- no augmentation
+- no normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: CrossEntropy
+
+lowest loss for validation set: 0.04125453324781524, with an accuracy of 0.8333333333333334, cloud acc 0.7, clear acc = 0.8846153846153846
+
+Second try Again C:
+- no augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: CrossEntropy
+
+lowest loss for validation set: 0.03695442941453722, with an accuracy of 0.8611111111111112, cloud acc 0.75, clear acc = 0.9038461538461539
+
+
+Second try Again C:
+- no augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: CrossEntropy
+- Layers: (6, 12, 5), (12, 24, 5) 
+
+lowest loss for validation set: 0.03816206194460392, with an accuracy of 0.8611111111111112, cloud acc 0.65, clear acc = 0.9423076923076923
+
+Second try Again C:
+- no augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: CrossEntropy
+- Kernel size: 3
+
+lowest loss for validation set: 0.04068836569786072, with an accuracy of 0.8333333333333334, cloud acc 0.65, clear acc = 0.9038461538461539
+
+Second try Again C:
+- no augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 50
+- Adam optim
+- criterion: CrossEntropy
+- dropout
+
+lowest loss for validation set: 0.03956854488286707, with an accuracy of 0.8611111111111112, cloud acc 0.6, clear acc = 0.9615384615384616
+
+Third try:
+- augmentation
+- normalization 
+- all bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: CrossEntropy
+
+lowest loss for validation set: 0.04139863182273176, with an accuracy of 0.8611111111111112, cloud acc 0.5, clear acc = 1.0
+
+Fourth try:
+- augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: CrossEntropy
+
+lowest loss for validation set: 0.03900835042198499, with an accuracy of 0.8333333333333334, cloud acc 0.75, clear acc = 0.8653846153846154
+
+Fitfth Try:
+- no augmentation
+- no normalization 
+- 12 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: BCE
+- Sigmoid
+
+lowest loss for validation set: 0.040024798156486616, with an accuracy of 0.9166666666666666, cloud acc 0.7, clear acc = 1.0
+
+Fitfth Try Again:
+- no augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: BCE
+- Sigmoid
+
+lowest loss for validation set: 0.04019946004781458, with an accuracy of 0.8611111111111112, cloud acc 0.6, clear acc = 0.9615384615384616
+
+Fitfth Try Again:
+- no augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 50
+- Adam optim
+- criterion: BCE
+- Sigmoid
+
+lowest loss for validation set: 0.03789037879970339, with an accuracy of 0.8472222222222222, cloud acc 0.8, clear acc = 0.8653846153846154
+
+Fitfth Try Again:
+- no augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 50
+- Adam optim
+- criterion: BCE
+- Sigmoid
+- Layers (6, 12, 5), (12, 24, 5) 
+
+lowest loss for validation set: 0.03686503113971816, with an accuracy of 0.8611111111111112, cloud acc 0.7, clear acc = 0.9230769230769231
+
+Fitfth Try Again:
+- no augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 50
+- Adam optim
+- criterion: BCE
+- Sigmoid
+- dropout
+
+lowest loss for validation set: 0.03854369827442699, with an accuracy of 0.8611111111111112, cloud acc 0.65, clear acc = 0.9423076923076923
+
+Sixth Try:
+- augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: BCE
+- Sigmoid
+
+lowest loss for validation set: 0.039247669693496495, with an accuracy of 0.8472222222222222, cloud acc 0.7, clear acc = 0.9038461538461539
+
+Seventh Try:
+- augmentation
+- normalization 
+- 6 bands
+- LR = 0.0001
+- Epochs = 30
+- Adam optim
+- criterion: BCE
+- Sigmoid
+- Layers (6, 12, 5), (12, 24, 5)
+
+lowest loss for validation set: 0.03635635309749179, with an accuracy of 0.8333333333333334, cloud acc 0.75, clear acc = 0.8653846153846154
