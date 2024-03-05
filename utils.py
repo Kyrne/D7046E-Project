@@ -297,9 +297,23 @@ def test_model(model, test_loader, sigmoid=False, cnn = False):
     print(f'Correct Clear {clear_correct} times out of {total_clear}: {100*clear_correct/total_clear:.2f}%')
     print(f'Correct Cloudy {cloudy_correct} times out of {total_cloudy}: {100*cloudy_correct/total_cloudy:.2f}%')
     
-    print(f'Recall Score = {recall_score(test_labels, predictions)}')
-    print(f'Precision Score = {precision_score(test_labels, predictions)}')
-    print(f'F1 Score = {f1_score(test_labels, predictions)}')
+    f1_cloudy = f1_score(test_labels, predictions)
+    f1_clear = f1_score(test_labels, predictions, pos_label=0)
+    rec_cloudy = recall_score(test_labels, predictions)
+    rec_clear = recall_score(test_labels, predictions, pos_label=0)
+    prec_cloudy = precision_score(test_labels, predictions)
+    prec_clear = precision_score(test_labels, predictions, pos_label=0)
+    
+    print(f'F1 avg = {(f1_clear+f1_cloudy)/2}')
+    print(f'F1 Score Clear = {f1_clear}')
+    print(f'F1 Score Cloudy = {f1_cloudy}')
+    print(f'Recall avg = {(rec_clear+rec_cloudy)/2}')
+    print(f'Recall Score Clear = {rec_clear}')
+    print(f'Recall Score Cloudy = {rec_cloudy}')
+    print(f'Precision avg = {(prec_clear+prec_cloudy)/2}')
+    print(f'Precision Score Clear = {prec_clear}')
+    print(f'Precision Score Cloudy = {prec_cloudy}')
+    
 
     cm = confusion_matrix(test_labels, predictions)
     ConfusionMatrixDisplay(confusion_matrix = cm,  display_labels=['Clear', 'Cloudy']).plot()
