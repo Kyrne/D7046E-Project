@@ -3,7 +3,7 @@ import numpy as np
 from torch.utils.data import Dataset
 import torch
 import matplotlib.pyplot as plt
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, precision_score, recall_score, f1_score
 
 BASE_PATH_DATA = 'data/skogsstyrelsen/'
 IMG_PATHS_TRAIN = 'skogs_names_train.npy'
@@ -296,6 +296,24 @@ def test_model(model, test_loader, sigmoid=False, cnn = False):
 
     print(f'Correct Clear {clear_correct} times out of {total_clear}: {100*clear_correct/total_clear:.2f}%')
     print(f'Correct Cloudy {cloudy_correct} times out of {total_cloudy}: {100*cloudy_correct/total_cloudy:.2f}%')
+    
+    f1_cloudy = f1_score(test_labels, predictions)
+    f1_clear = f1_score(test_labels, predictions, pos_label=0)
+    rec_cloudy = recall_score(test_labels, predictions)
+    rec_clear = recall_score(test_labels, predictions, pos_label=0)
+    prec_cloudy = precision_score(test_labels, predictions)
+    prec_clear = precision_score(test_labels, predictions, pos_label=0)
+    
+    print(f'F1 avg = {(f1_clear+f1_cloudy)/2}')
+    print(f'F1 Score Clear = {f1_clear}')
+    print(f'F1 Score Cloudy = {f1_cloudy}')
+    print(f'Recall avg = {(rec_clear+rec_cloudy)/2}')
+    print(f'Recall Score Clear = {rec_clear}')
+    print(f'Recall Score Cloudy = {rec_cloudy}')
+    print(f'Precision avg = {(prec_clear+prec_cloudy)/2}')
+    print(f'Precision Score Clear = {prec_clear}')
+    print(f'Precision Score Cloudy = {prec_cloudy}')
+    
 
     cm = confusion_matrix(test_labels, predictions)
     ConfusionMatrixDisplay(confusion_matrix = cm,  display_labels=['Clear', 'Cloudy']).plot()
